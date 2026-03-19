@@ -127,3 +127,30 @@ class CazaEstelar(Nave):
     
     def obtenerDatos(self):
         return super().obtenerDatos()+"\nDotación: "+str(self.dotacion)
+
+class Imperio:
+    def __init__(self):
+        self.flota = []
+        self.almacenes = []
+    
+    def añadir_flota(self, nave):
+        for n in self.flota:
+            if n.id_combate == nave.id_combate:
+                print("Ya se encuentra disponible en la flota")
+        self.flota.append(nave)
+	
+    def añadir_almacen(self, almacen):
+        for a in self.almacenes:
+            if a.nombre == almacen.nombre:
+                print("Ya existe este almacén")
+        self.almacenes.append(almacen)
+    
+    def listar_flota(self):
+        cadena = ""
+        for f in self.flota:
+            cadena = cadena+str(f)+"\n"
+
+    def listar_almacenes(self):
+        cadena = ""
+        for a in self.almacenes:
+            cadena = cadena+str(a)+"\n"
