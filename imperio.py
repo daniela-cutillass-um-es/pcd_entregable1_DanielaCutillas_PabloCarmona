@@ -88,11 +88,11 @@ class Nave(UnidadCombate):
         self.nombre = nombre
         self.catalogo_piezas = catalogo_piezas
     
-    def añadir_piezas_catalogo(self, nombre_repuesto):
-        if nombre_repuesto in self.catalogo_piezas:
-            print("Esta pieza ya se encuentra en el catálogo")
-            return
-        self.catalogo_piezas.append(nombre_repuesto)
+    def añadir_piezas_catalogo(self, repuesto):
+        for pieza in self.catalogo_piezas:
+            if pieza.nombre == repuesto.nombre:
+                raise ExistenciaError(f"Ya se encuentra disponible la pieza {repuesto.nombre} en el catálogo de esta nave")
+        self.catalogo_piezas.append(repuesto)
     
     def obtenerDatos(self):
         return super().obtenerDatos() + "\nNombre: " + str(self.nombre) + "\nCatálogo: " + str(self.catalogo_piezas)
@@ -148,16 +148,14 @@ class Imperio:
     def añadir_flota(self, nave):
         for n in self.flota:
             if n.id_combate == nave.id_combate:
-                print("Ya se encuentra disponible en la flota")
-                return # detenemos la ejecucion si ya existe la nave
+                raise ExistenciaError(f"La nave {nave.nombre} con id de combate {nave.id_combate} ya se encuentra disponible en la flota")
         self.flota.append(nave)
 	
     # método para crear un nuevo almacén, validando que no haya otro con el mismo nombre
     def añadir_almacen(self, almacen):
         for a in self.almacenes:
             if a.nombre == almacen.nombre:
-                print("Ya existe este almacén")
-                return # detenemos la ejecucion si ya existe el almacén
+                raise ExistenciaError(f"El almacén {almacen.nombre} ya existe")
         self.almacenes.append(almacen)
     
     # método que devuelve una cadena de texto con toda la información de la flota
@@ -165,8 +163,7 @@ class Imperio:
         cadena = "FLOTA IMPERIAL \n"
         for f in self.flota:
             cadena += f.obtenerDatos() +"\n"
-        return cadena
-        
+        return cadena  
 
     # método que devuelve una cadena de texto con toda la información de los almacenes
     def listar_almacenes(self):
@@ -174,7 +171,6 @@ class Imperio:
         for a in self.almacenes:
             cadena += a.obtenerDatos() +"\n"
         return cadena
-    
 
 if __name__ == "__main__":
     print("\nSistema de gestión del Imperio Galáctico\n")
