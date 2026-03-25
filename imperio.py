@@ -173,7 +173,7 @@ class Imperio:
         return cadena
 
 if __name__ == "__main__":
-    print("\nSistema de gestión del Imperio Galáctico\n")
+    print("SISTEMA DE GESTIÓN DEL IMPERIO GALÁCTICO")
     sistema_imperio = Imperio()
 
     # creamos e insertamos repuestos en un almacén
@@ -199,3 +199,40 @@ if __name__ == "__main__":
     # imprimimos los resultados para validar que funciona (polimorfismo en obtenerDatos)
     print(sistema_imperio.listar_almacenes())
     print(sistema_imperio.listar_flota())
+
+    # --- PRUEBAS DE GESTIÓN DE EXCEPCIONES (Requisito de la práctica) ---
+    print("PRUEBAS DE GESTIÓN DE EXCEPCIONES")
+
+    # Con try..except capturamos la excepción que debería de saltar e imprimimos el mensaje explicativo
+    # del error, pero el programa continúa su ejecución normal, de esta forma no se detiene
+
+    # Intento añadir una pieza que ya existe en el almacén
+    print("Prueba 1: Añadimos una pieza duplicada al almacén principal")
+    try:
+        pieza_repetida = Repuesto("Motor básico", "Otro Proveedor", 1, 10.0)
+        almacen_principal.añadir_pieza(pieza_repetida)
+    except ExistenciaError as e:
+        print(f"Excepción esperada: {e}\n")
+
+    # Intento adquirir más piezas de las que hay en stock
+    print("Prueba 2: Adquirir piezas sin stock suficiente")
+    try:
+        # El motor básico tiene 7 unidades, intentamos pedir 20
+        almacen_principal.adquirir_pieza("Motor básico", 20)
+    except StockInsuficienteError as e:
+        print(f"Excepción esperada: {e}\n")
+
+    # Intento buscar una pieza que no existe en el catálogo del almacén
+    print("Prueba 3: Buscar una pieza inexistente en el almacén")
+    try:
+        almacen_principal.buscar_pieza("Hiperimpulsor Halcón")
+    except RepuestoNoEncontradoError as e:
+        print(f"Excepción esperada: {e}\n")
+
+    # Intento añadir una nave con un ID que ya está en la flota
+    print("Prueba 4: Añadir nave con ID existente")
+    try:
+        nave_clon = CazaEstelar("ID-001", 9999, "Caza Clonado", [], 1) # ID-001 ya la tiene la Estrella de la Muerte
+        sistema_imperio.añadir_flota(nave_clon)
+    except ExistenciaError as e:
+        print(f"Excepción esperada: {e}\n")
