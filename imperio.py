@@ -4,74 +4,102 @@ from abc import ABCMeta, abstractmethod
 # Excepciones posibles de nuestro programa
 
 class StockInsuficienteError(Exception):
+    '''
     # Excepción lanzada cuando no hay suficiente stock de un repuesto
+    '''
     pass
 
 class RepuestoNoEncontradoError(Exception):
-    # Excepción lanzada cuando no se encuentra un repuesto en el almacén
+    '''Excepción lanzada cuando no se encuentra un repuesto en el almacén'''
     pass
 
 class ExistenciaError(Exception):
-	# Excepción lanzada cuando se va a añadir un repuesto en un almacén en el que ya está
+	'''Excepción lanzada cuando se va a añadir un repuesto en un almacén en el que ya está'''
 	pass
 
-# clase que representa una pieza de repuesto individual y controla su nivel de stock disponible
 class Repuesto:
+    '''
+    Repuesto es una clase que representa una pieza de repuesto individual.
+    Hemos implementado tres métodos:
+        - get_cantidad(): nos permite saber la cantidad que hay de un repuesto concreto
+        - modificar_cantidad(): lo usamos para mantener actualizado el método anterior
+        - obtenerDatos(): imprimimos toda la información de la clase de forma legible
+    '''    
+    def __init__(self, nombre, proveedor, cantidad, precio):
+        self.nombre = nombre
+        self.proveedor = proveedor
+        self.__cantidad = cantidad # atributo privado
+        self.precio = precio
+	
+    def get_cantidad(self):
+        '''
+        Con este método obtenemos la cantidad actual que hay disponible de cada repuesto
+        '''
+        return self.__cantidad
+	
+    def modificar_cantidad(self, variacion):
+        '''
+        Con este método modificamos la cantidad que hay de un repuesto cuando se necesite coger
+        '''
+        if self.__cantidad + variacion < 0: # si se coge más cantidad de la que hay realmente
+            raise StockInsuficienteError(f"No hay suficiente stock para {self.nombre}.") # lanzamos una excepción
+        self.__cantidad += variacion # si todo va bien modificamos la cantidad del repuesto
+	
+    def obtenerDatos(self):
+        return "Nombre de la pieza: "+str(self.nombre)+"\nProveedor: "+str(self.proveedor)+"\nCantidad: "+str(self.__cantidad)+"\nPrecio: "+str(self.precio)
 
-	def __init__(self, nombre, proveedor, cantidad, precio):
-		self.nombre = nombre
-		self.proveedor = proveedor
-		self.__cantidad = cantidad
-		self.precio = precio
-	
-	# con este método obtenemos la cantidad actual que hay disponible de cada repuesto
-	def get_cantidad(self):
-		return self.__cantidad
-	
-	# cuando se necesite cierta cantidad de un repuesto usaremos este método para modificarla
-	def modificar_cantidad(self, variacion):
-		if self.__cantidad + variacion < 0: # si se coge más cantidad de la que hay realmente
-			raise StockInsuficienteError(f"No hay suficiente stock para {self.nombre}.") # lanzamos una excepción
-		self.__cantidad += variacion # si todo va bien modificamos la cantidad del repuesto
-	
-	def obtenerDatos(self):
-		return "Nombre de la pieza: "+str(self.nombre)+"\nProveedor: "+str(self.proveedor)+"\nCantidad: "+str(self.__cantidad)+"\nPrecio: "+str(self.precio)
-
-# clase que gestiona un catálogo de repuestos almacenados en un almacén concreto
 class Almacen:
+    '''
+    Almacén es una clase que gestiona un catálogo de repuestos almacenados en un almacén concreto
+    Hemos implementado cuatro métodos:
+        - añadir_pieza(): lo usamos para ir añadiendo piezas al catálogo que es una lista
+        - buscar_pieza(): verificar si se encuentra una pieza en el catálogo o no
+        - adquirir_pieza(): lo usamos para actualizar las cantidades de la pieza de la que se ha adquirido una cantidad concreta
+        - obtenerDatos(): imprimimos toda la información de la clase de forma legible
+    '''
 
     def __init__(self, nombre, localizacion):
         self.catalogo_piezas = []
         self.nombre = nombre
         self.localizacion = localizacion
 
-    # usaremos este método para añadir piezas al catálogo del almacén
-    def añadir_pieza(self,pieza): # añadiremos clases Pieza()
+    def añadir_pieza(self,pieza):
+        '''
+        Con este método añadimos piezas al catálogo del almacén.
+        Iremos añadiendo en el catálogo clases Repuesto().
+        '''
         for p in self.catalogo_piezas:
             if p.nombre == pieza.nombre: # si ya está en el catálogo esa pieza/repuesto
                 raise ExistenciaError(f"Ya se encuentra disponible el repuesto {pieza.nombre} en este almacén") # lanzamos una excepción
         self.catalogo_piezas.append(pieza) # en otro caso añadimos la pieza al catálogo
     
-    # usaremos este método para saber si una pieza concreta se encuentra disponible en un almacén concreto
     def buscar_pieza(self, nombre):
+        '''
+        Con este método podremos verificar si una pieza se encuentra en el catálogo o aún no ha sido añadida.
+        '''
         for pieza in self.catalogo_piezas:
-            if pieza.nombre == nombre:
-                return pieza
+            if pieza.nombre == nombre: # buscamos las piezas por su nombre y si se encuentra
+                return pieza # devolvemos la clase para ver toda su información
         raise RepuestoNoEncontradoError(f"La pieza {nombre} no está disponible en este almacén") # si no se encuentra lanzamos una excepción
     
-    # usaremos este método para adquirir una pieza del catálogo de cierta cantidad
     def adquirir_pieza(self, nombre, cantidad):
+        '''
+        Este método se usa cuando el comandante necesita adquirir una cierta cantidad de una pieza
+        '''
         pieza_encontrada = self.buscar_pieza(nombre) # buscamos la pieza en el catálogo
-        pieza_encontrada.modificar_cantidad(-cantidad) # modificamos la cantidad con la que vamos a coger
-        print(f"Se ha adquirido una cantidad de {cantidad} piezas de {nombre}")
+        pieza_encontrada.modificar_cantidad(-cantidad) # modificamos la cantidad con la que hemos indicado
+        print(f"Se ha adquirido una cantidad de {cantidad} piezas del repuesto {nombre}")
     
     def obtenerDatos(self):
-        # convertimos la lista de objetos Repuesto a una lista de nombres para que se imprima de forma legible
         nombres_piezas = [p.nombre for p in self.catalogo_piezas]
         return "Nombre: "+str(self.nombre)+"\nLocalización: "+str(self.localizacion)+"\nCatálogo de piezas: "+str(nombres_piezas)
 
-# clase abstracta base para todas las unidades de combate, no se puede instanciar directamente
 class UnidadCombate(metaclass=ABCMeta):
+    '''
+    UnidadCombate es una clase abstracta base para todas las unidades de combate, no se puede instanciar directamente
+    Hemos implementado un método:
+        - obtenerDatos(): imprimimos toda la información de la clase de forma legible
+    '''
     def __init__(self, id_combate, clave_cifrada):
         self.id_combate = id_combate
         self.clave_cifrada = clave_cifrada
@@ -83,12 +111,23 @@ class UnidadCombate(metaclass=ABCMeta):
 
 # clase que hereda de UnidadCombate, representa una nave genérica
 class Nave(UnidadCombate):
+    '''
+    Nave es una clase que hereda de UnidadCombate, representa una nave genérica.
+    Esta clase a su vez es una superclase intermedia, ya que centraliza la gestión de el catálogo de piezas de las naves.
+    Hemos implementado dos métodos:
+        - añadir_piezas_catalogo(): lo usamos para ir añadiendo piezas al catálogo de una nave ya que es una lista
+        - obtenerDatos(): imprimimos toda la información de la clase de forma legible
+    '''
     def __init__(self, id_combate, clave_cifrada, nombre, catalogo_piezas):
         super().__init__(id_combate, clave_cifrada)
         self.nombre = nombre
         self.catalogo_piezas = catalogo_piezas
     
     def añadir_piezas_catalogo(self, repuesto):
+        '''
+        Con este método añadimos piezas al catálogo de una nave concreta.
+        Añadimos clases Repuesto().
+        '''
         for pieza in self.catalogo_piezas:
             if pieza.nombre == repuesto.nombre:
                 raise ExistenciaError(f"Ya se encuentra disponible la pieza {repuesto.nombre} en el catálogo de esta nave")
@@ -97,12 +136,18 @@ class Nave(UnidadCombate):
     def obtenerDatos(self):
         return super().obtenerDatos() + "\nNombre: " + str(self.nombre) + "\nCatálogo: " + str(self.catalogo_piezas)
 
+# enumeración
 class Ubicacion(Enum):
     ENDOR = 1
     CUMULO_RAIMOS = 2
     NEBULOSA_KALIIDA = 3
 
 class EstacionEspacial(Nave):
+    '''
+    EstacionEspacial es una clase que hereda de la clase Nave, pero con ciertos atributos concretos para ésta como la tripulación que hay en ella, el pasaje o la ubicación
+    Hemos implementado un método para esta clase:
+        - obtenerDatos(): imprimimos toda la información de la clase de forma legible
+    '''
     def __init__(self, id_combate, clave_cifrada, nombre, catalogo_piezas, tripulacion, pasaje, ubicacion):
         super().__init__(id_combate, clave_cifrada, nombre, catalogo_piezas)
         self.tripulacion = tripulacion
@@ -112,14 +157,18 @@ class EstacionEspacial(Nave):
     def obtenerDatos(self):
         return super().obtenerDatos()+"\nTripulación: "+str(self.tripulacion)+"\nPasaje: "+str(self.pasaje)+"\nUbicación: "+str(self.ubicacion.name)
 
-# enumeracion para limitar los tipos de clase de las naves
+# enumeracion
 class Clase(Enum):
     EJECUTOR = 1
     ECLIPSE = 2
     SOBERANO = 3
 
-# clase que hereda de Nave, representa una Nave Estelar
 class NaveEstelar(Nave):
+    '''
+    NaveEstelar es una clase que hereda de la clase Nave, pero con ciertos atributos concretos para ésta como la tripulación, el pasaje o la clase
+    Hemos implementado un método para esta clase:
+        - obtenerDatos(): imprimimos toda la información de la clase de forma legible
+    '''
     def __init__(self, id_combate, clave_cifrada, nombre, catalogo_piezas, tripulacion, pasaje, clase):
         super().__init__(id_combate, clave_cifrada, nombre, catalogo_piezas)
         self.tripulacion = tripulacion
@@ -129,8 +178,12 @@ class NaveEstelar(Nave):
     def obtenerDatos(self):
         return super().obtenerDatos()+"\nTripulación: "+str(self.tripulacion)+"\nPasaje: "+str(self.pasaje)+"\nClase: "+str(self.clase.name)
 
-# clase que hereda de Nave, representa un Caza Estelar
 class CazaEstelar(Nave):
+    '''
+    CazaEstelar es una clase que hereda de la clase Nave, pero con un atributo concreto para ésta, dotación
+    Hemos implementado un método para esta clase:
+        - obtenerDatos(): imprimimos toda la información de la clase de forma legible
+    '''
     def __init__(self, id_combate, clave_cifrada, nombre, catalogo_piezas, dotacion):
         super().__init__(id_combate, clave_cifrada, nombre, catalogo_piezas)
         self.dotacion = dotacion
@@ -138,35 +191,50 @@ class CazaEstelar(Nave):
     def obtenerDatos(self):
         return super().obtenerDatos()+"\nDotación: "+str(self.dotacion)
 
-# clase principal que actúa como sistema para gestionar flotas y almacenes
 class Imperio:
+    '''
+    Imperio es la clase principal, que actúa como sistema para gestionar las flotas y los almacenes
+    Hemos implementado cuatro métodos:
+        - añadir_flota(): lo usamos para añadir una nueva nave a la flota del imperio
+        - añadir_almacen(): lo usamos para añadir un nuevo almacen al imperio
+        - listar_flota(): lo usamos para saber cuáles son las naves y la información sobre ellas
+        - listar_almacenes(): lo usamos para saber cuáles son los almacenes y la información sobre ellos
+    '''
     def __init__(self):
         self.flota = []
         self.almacenes = []
     
-    # usamos este método para añadir una nave a la flota, validando que su id de combate no exista previamente
     def añadir_flota(self, nave):
+        '''
+        Este método va añadiendo una nave a la flota del imperio, validando que su id de combate no exista previamente
+        '''
         for n in self.flota:
             if n.id_combate == nave.id_combate:
                 raise ExistenciaError(f"La nave {nave.nombre} con id de combate {nave.id_combate} ya se encuentra disponible en la flota")
         self.flota.append(nave)
 	
-    # método para crear un nuevo almacén, validando que no haya otro con el mismo nombre
     def añadir_almacen(self, almacen):
+        '''
+        Este método crea un nuevo almacén del imperio, validando que no hay otro con el mismo nombre
+        '''
         for a in self.almacenes:
             if a.nombre == almacen.nombre:
                 raise ExistenciaError(f"El almacén {almacen.nombre} ya existe")
         self.almacenes.append(almacen)
     
-    # método que devuelve una cadena de texto con toda la información de la flota
     def listar_flota(self):
+        '''
+        Este método devuelve una cadena de texto con toda la información de la flota del imperio
+        '''
         cadena = "FLOTA IMPERIAL \n"
         for f in self.flota:
             cadena += f.obtenerDatos() +"\n"
         return cadena  
 
-    # método que devuelve una cadena de texto con toda la información de los almacenes
     def listar_almacenes(self):
+        '''
+        Este método devuelve una cadena de texto con toda la información de los almacenes del imperio
+        '''
         cadena = "ALMACENES IMPERIALES \n"
         for a in self.almacenes:
             cadena += a.obtenerDatos() +"\n"
